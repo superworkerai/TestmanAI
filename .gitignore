@@ -18,6 +18,7 @@ public/test-results/
 test-results/
 screenshots/
 videos/
+coverage/
 
 # OS files
 .DS_Store

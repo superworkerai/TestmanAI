@@ -175,7 +175,14 @@ TestmanAI/
 ├── public/
 │   ├── css/                 # TailwindCSS files
 │   └── test-results/        # Screenshots and videos
+├── tests/
+│   ├── setup.js             # Test configuration
+│   ├── unit/                # Unit tests
+│   └── integration/         # Integration tests
 ├── server.js                # Express server
+├── jest.config.js           # Jest configuration
+├── TESTING.md               # Testing guide
+├── CONTRIBUTING.md          # Contribution guidelines
 └── package.json             # Dependencies
 ```
 
@@ -277,9 +284,86 @@ npm run build:css
 
 To improve AI conversion accuracy, you can update the OpenAI system prompt in `services/openaiService.js` with more examples.
 
+## Testing
+
+**TestmanAI follows Test-Driven Development (TDD) practices. All code must include comprehensive tests.**
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run only unit tests
+npm run test:unit
+
+# Run only integration tests
+npm run test:integration
+
+# Run tests for CI
+npm run test:ci
+```
+
+### Test Coverage
+
+We maintain high test coverage standards:
+- Branches: 70% minimum
+- Functions: 70% minimum
+- Lines: 70% minimum
+- Statements: 70% minimum
+
+View coverage report:
+```bash
+npm test
+# Opens coverage/lcov-report/index.html
+```
+
+### Test Structure
+
+```
+tests/
+├── setup.js                    # Test configuration
+├── unit/                       # Unit tests
+│   ├── utils/
+│   │   └── encryption.test.js
+│   └── services/
+│       └── openaiService.test.js
+└── integration/                # Integration tests
+    └── routes/
+        └── variables.test.js
+```
+
+### Writing Tests
+
+All new features MUST include tests written BEFORE implementation (TDD):
+
+```javascript
+// 1. Write failing test first
+it('should validate email format', () => {
+  expect(validateEmail('test@example.com')).toBe(true);
+  expect(validateEmail('invalid')).toBe(false);
+});
+
+// 2. Implement feature to pass test
+// 3. Refactor while keeping tests green
+```
+
+**See [TESTING.md](TESTING.md) for comprehensive testing guide.**
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+**All contributions must follow Test-Driven Development (TDD).**
+
+Before submitting a pull request:
+1. Write tests BEFORE implementing features
+2. Ensure all tests pass: `npm test`
+3. Maintain coverage above 70%
+4. Follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING.md)
+
+Read our detailed [Testing Guide](TESTING.md) and [Contributing Guidelines](CONTRIBUTING.md).
 
 ## License
 
