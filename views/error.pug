@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  .card.max-w-2xl.mx-auto.text-center
+    h1.text-4xl.font-bold.text-red-600.mb-4= error.status || 500
+    h2.text-2xl.font-semibold.mb-4= message
+    if error.stack && error.stack.length > 0
+      .mt-8.text-left
+        h3.text-lg.font-semibold.mb-2 Error Details:
+        pre.bg-gray-100.p-4.rounded.text-sm.overflow-auto= error.stack
+    .mt-8
+      a.btn-primary(href="/") Go Home

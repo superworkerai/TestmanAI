@@ -1,0 +1,181 @@
+extends ../layout
+
+block content
+  div(x-data="newTestSuitePage()")
+    .mb-8
+      h1.text-3xl.font-bold.text-gray-900.mb-2 Create New Test Suite
+      p.text-gray-600 Write your test steps in plain English. Our AI will convert them to executable Playwright code.
+
+    form(@submit.prevent="saveSuite")
+      .card.mb-6
+        h2.text-xl.font-semibold.mb-4 Basic Information
+
+        .mb-4
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="name") Test Suite Name *
+          input#name.input-field(
+            type="text"
+            x-model="suite.name"
+            required
+            placeholder="e.g., Login Flow Test"
+          )
+
+        .mb-4
+          label.block.text-sm.font-medium.text-gray-700.mb-2(for="description") Description
+          textarea#description.input-field(
+            x-model="suite.description"
+            rows="3"
+            placeholder="Describe what this test suite does..."
+          )
+
+      .card.mb-6
+        .flex.justify-between.items-center.mb-4
+          h2.text-xl.font-semibold Test Steps
+          button.btn-secondary(type="button" @click="addStep") + Add Step
+
+        p.text-sm.text-gray-600.mb-4
+          | Write each step in plain English. Use
+          code.bg-gray-100.px-1.rounded {{variableName}}
+          |  to reference variables.
+
+        div(x-show="suite.steps.length === 0")
+          .text-center.py-8.text-gray-500
+            p No steps added yet. Click "Add Step" to get started.
+
+        .space-y-4
+          template(x-for="(step, index) in suite.steps" :key="index")
+            .test-step
+              .flex.items-start.justify-between.mb-2
+                .flex.items-center
+                  span.bg-primary-600.text-white.rounded-full.w-8.h-8.flex.items-center.justify-center.text-sm.font-bold.mr-3(x-text="index + 1")
+                  label.text-sm.font-medium.text-gray-700 Step Instruction *
+                button.text-red-600.hover:text-red-800(
+                  type="button"
+                  @click="removeStep(index)"
+                  title="Remove step"
+                )
+                  svg.w-5.h-5(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+                    path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12")
+
+              textarea.input-field(
+                x-model="step.instruction"
+                rows="2"
+                required
+                placeholder="e.g., Navigate to https://example.com"
+              )
+
+              .mt-2
+                label.block.text-sm.font-medium.text-gray-700.mb-1 Description (optional)
+                input.input-field(
+                  type="text"
+                  x-model="step.description"
+                  placeholder="Additional notes about this step"
+                )
+
+      .card.mb-6
+        h2.text-xl.font-semibold.mb-4 Variables
+        p.text-sm.text-gray-600.mb-4 Select variables to use in this test suite. Variables are encrypted and secure.
+
+        .mb-4
+          button.btn-secondary(type="button" @click="loadVariables")
+            span(x-show="!variablesLoaded") Load Available Variables
+            span(x-show="variablesLoaded") Refresh Variables
+
+        div(x-show="availableVariables.length > 0")
+          .space-y-2
+            template(x-for="variable in availableVariables" :key="variable._id")
+              label.flex.items-center.p-3.border.rounded.hover:bg-gray-50.cursor-pointer
+                input.mr-3(
+                  type="checkbox"
+                  :value="variable._id"
+                  x-model="suite.variables"
+                )
+                .flex-1
+                  .font-medium(x-text="variable.name")
+                  .text-sm.text-gray-600(x-text="variable.description || 'No description'")
+                .badge-success(x-show="variable.isSensitive") Encrypted
+
+        div(x-show="variablesLoaded && availableVariables.length === 0")
+          .text-center.py-6.text-gray-500
+            p No variables found.
+              a.text-primary-600.hover:underline(href="/variables") Create variables
+              |  first.
+
+      .flex.space-x-4
+        button.btn-primary(type="submit" :disabled="saving")
+          span(x-show="!saving") Create Test Suite
+          span(x-show="saving") Creating...
+        a.btn-secondary(href="/test-suites") Cancel
+
+  script.
+    function newTestSuitePage() {
+      return {
+        suite: {
+          name: '',
+          description: '',
+          steps: [],
+          variables: []
+        },
+        availableVariables: [],
+        variablesLoaded: false,
+        saving: false,
+
+        addStep() {
+          this.suite.steps.push({
+            order: this.suite.steps.length + 1,
+            instruction: '',
+            description: ''
+          });
+        },
+
+        removeStep(index) {
+          this.suite.steps.splice(index, 1);
+          // Reorder steps
+          this.suite.steps.forEach((step, i) => {
+            step.order = i + 1;
+          });
+        },
+
+        async loadVariables() {
+          try {
+            const response = await fetch('/api/variables');
+            const data = await response.json();
+
+            if (data.success) {
+              this.availableVariables = data.data;
+              this.variablesLoaded = true;
+            }
+          } catch (err) {
+            alert('Error loading variables: ' + err.message);
+          }
+        },
+
+        async saveSuite() {
+          if (this.suite.steps.length === 0) {
+            alert('Please add at least one test step');
+            return;
+          }
+
+          try {
+            this.saving = true;
+
+            const response = await fetch('/api/test-suites', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.suite)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              window.location.href = `/test-suites/${data.data._id}`;
+            } else {
+              alert('Failed to create test suite: ' + data.error);
+            }
+          } catch (err) {
+            alert('Error creating test suite: ' + err.message);
+          } finally {
+            this.saving = false;
+          }
+        }
+      }
+    }

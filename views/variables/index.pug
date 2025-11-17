@@ -1,0 +1,260 @@
+extends ../layout
+
+block content
+  div(x-data="variablesPage()")
+    .flex.justify-between.items-center.mb-8
+      div
+        h1.text-3xl.font-bold.text-gray-900 Variables
+        p.text-gray-600.mt-1 Manage encrypted variables for your test suites
+
+      button.btn-primary(@click="showCreateModal = true") + New Variable
+
+    div(x-show="loading")
+      .text-center.py-12
+        .spinner.mx-auto
+        p.mt-4.text-gray-600 Loading variables...
+
+    div(x-show="!loading && variables.length === 0" x-cloak)
+      .card.text-center.py-12
+        svg.w-24.h-24.mx-auto.text-gray-400.mb-4(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+          path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z")
+        h3.text-xl.font-semibold.mb-2 No Variables Yet
+        p.text-gray-600.mb-4 Create encrypted variables to use in your test suites
+        button.btn-primary(@click="showCreateModal = true") Create Your First Variable
+
+    div(x-show="!loading && variables.length > 0" x-cloak)
+      .card.overflow-x-auto
+        table.min-w-full.divide-y.divide-gray-200
+          thead.bg-gray-50
+            tr
+              th.px-4.py-3.text-left.text-xs.font-medium.text-gray-500.uppercase Name
+              th.px-4.py-3.text-left.text-xs.font-medium.text-gray-500.uppercase Description
+              th.px-4.py-3.text-left.text-xs.font-medium.text-gray-500.uppercase Type
+              th.px-4.py-3.text-left.text-xs.font-medium.text-gray-500.uppercase Created
+              th.px-4.py-3.text-left.text-xs.font-medium.text-gray-500.uppercase Actions
+
+          tbody.bg-white.divide-y.divide-gray-200
+            template(x-for="variable in variables" :key="variable._id")
+              tr.hover:bg-gray-50
+                td.px-4.py-4
+                  .font-medium(x-text="variable.name")
+                  .text-xs.text-gray-500.mt-1 Reference as: {{variable.name}}
+                td.px-4.py-4.text-sm.text-gray-600
+                  span(x-text="variable.description || 'No description'")
+                td.px-4.py-4.whitespace-nowrap
+                  span.badge-success(x-show="variable.isSensitive") Encrypted
+                  span.badge-pending(x-show="!variable.isSensitive") Plain
+                td.px-4.py-4.whitespace-nowrap.text-sm.text-gray-600
+                  span(x-text="new Date(variable.createdAt).toLocaleDateString()")
+                td.px-4.py-4.whitespace-nowrap.text-sm
+                  .flex.space-x-3
+                    button.text-blue-600.hover:text-blue-800(@click="editVariable(variable)")
+                      svg.w-5.h-5(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+                        path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z")
+                    button.text-red-600.hover:text-red-800(@click="deleteVariable(variable._id)")
+                      svg.w-5.h-5(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+                        path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16")
+
+    //- Create/Edit Modal
+    div(x-show="showCreateModal || showEditModal" @click="closeModals" x-cloak)
+      .modal-backdrop
+        .modal-content.max-w-lg.p-6(@click.stop)
+          .flex.justify-between.items-center.mb-4
+            h2.text-2xl.font-bold(x-text="showEditModal ? 'Edit Variable' : 'Create Variable'")
+            button.text-gray-500.hover:text-gray-700(@click="closeModals")
+              svg.w-6.h-6(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+                path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12")
+
+          form(@submit.prevent="showEditModal ? updateVariable() : createVariable()")
+            .mb-4
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Variable Name *
+              input.input-field(
+                type="text"
+                x-model="currentVariable.name"
+                required
+                placeholder="e.g., username, apiKey"
+                :disabled="showEditModal"
+              )
+              p.text-xs.text-gray-500.mt-1 Use this name in your test steps as {{currentVariable.name}}
+
+            .mb-4
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Description
+              textarea.input-field(
+                x-model="currentVariable.description"
+                rows="2"
+                placeholder="What is this variable used for?"
+              )
+
+            .mb-4
+              label.block.text-sm.font-medium.text-gray-700.mb-2 Value *
+              input.input-field(
+                type="password"
+                x-model="currentVariable.value"
+                :required="!showEditModal"
+                placeholder="Enter the variable value"
+              )
+              p.text-xs.text-gray-500.mt-1(x-show="showEditModal") Leave blank to keep current value
+
+            .mb-4
+              label.flex.items-center
+                input.mr-2(
+                  type="checkbox"
+                  x-model="currentVariable.isSensitive"
+                )
+                span.text-sm.font-medium Encrypt this variable (recommended for sensitive data)
+
+            .flex.space-x-3
+              button.btn-primary(type="submit" :disabled="saving")
+                span(x-show="!saving" x-text="showEditModal ? 'Update' : 'Create'")
+                span(x-show="saving") Saving...
+              button.btn-secondary(type="button" @click="closeModals") Cancel
+
+  script.
+    function variablesPage() {
+      return {
+        variables: [],
+        loading: true,
+        saving: false,
+        showCreateModal: false,
+        showEditModal: false,
+        currentVariable: {
+          name: '',
+          description: '',
+          value: '',
+          isSensitive: true
+        },
+        editingId: null,
+
+        async init() {
+          await this.loadVariables();
+        },
+
+        async loadVariables() {
+          try {
+            this.loading = true;
+            const response = await fetch('/api/variables');
+            const data = await response.json();
+
+            if (data.success) {
+              this.variables = data.data;
+            } else {
+              alert('Failed to load variables');
+            }
+          } catch (err) {
+            alert('Error loading variables: ' + err.message);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        resetForm() {
+          this.currentVariable = {
+            name: '',
+            description: '',
+            value: '',
+            isSensitive: true
+          };
+          this.editingId = null;
+        },
+
+        closeModals() {
+          this.showCreateModal = false;
+          this.showEditModal = false;
+          this.resetForm();
+        },
+
+        editVariable(variable) {
+          this.currentVariable = {
+            name: variable.name,
+            description: variable.description || '',
+            value: '', // Don't show current value
+            isSensitive: variable.isSensitive
+          };
+          this.editingId = variable._id;
+          this.showEditModal = true;
+        },
+
+        async createVariable() {
+          try {
+            this.saving = true;
+
+            const response = await fetch('/api/variables', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.currentVariable)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              await this.loadVariables();
+              this.closeModals();
+            } else {
+              alert('Failed to create variable: ' + data.error);
+            }
+          } catch (err) {
+            alert('Error creating variable: ' + err.message);
+          } finally {
+            this.saving = false;
+          }
+        },
+
+        async updateVariable() {
+          try {
+            this.saving = true;
+
+            const payload = {
+              name: this.currentVariable.name,
+              description: this.currentVariable.description,
+              isSensitive: this.currentVariable.isSensitive
+            };
+
+            // Only include value if it was changed
+            if (this.currentVariable.value) {
+              payload.value = this.currentVariable.value;
+            }
+
+            const response = await fetch(`/api/variables/${this.editingId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              await this.loadVariables();
+              this.closeModals();
+            } else {
+              alert('Failed to update variable: ' + data.error);
+            }
+          } catch (err) {
+            alert('Error updating variable: ' + err.message);
+          } finally {
+            this.saving = false;
+          }
+        },
+
+        async deleteVariable(id) {
+          if (!confirm('Are you sure you want to delete this variable? This cannot be undone.')) {
+            return;
+          }
+
+          try {
+            const response = await fetch(`/api/variables/${id}`, {
+              method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              await this.loadVariables();
+            } else {
+              alert('Failed to delete variable');
+            }
+          } catch (err) {
+            alert('Error deleting variable: ' + err.message);
+          }
+        }
+      }
+    }

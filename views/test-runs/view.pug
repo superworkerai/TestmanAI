@@ -1,0 +1,194 @@
+extends ../layout
+
+block content
+  div(x-data=`viewTestRunPage('${testRunId}')`)
+    div(x-show="loading")
+      .text-center.py-12
+        .spinner.mx-auto
+        p.mt-4.text-gray-600 Loading test run...
+
+    div(x-show="!loading" x-cloak)
+      .flex.justify-between.items-start.mb-8
+        div
+          h1.text-3xl.font-bold.text-gray-900.mb-2(x-text="testRun.testSuiteName")
+          .flex.items-center.space-x-3.mt-2
+            span.badge-running(x-show="testRun.status === 'running'") Running
+            span.badge-success(x-show="testRun.status === 'completed'") Completed
+            span.badge-error(x-show="testRun.status === 'failed'") Failed
+            span.badge-pending(x-show="testRun.status === 'pending'") Pending
+
+            span.badge-success(x-show="testRun.overallResult === 'passed'") All Tests Passed
+            span.badge-error(x-show="testRun.overallResult === 'failed'") Tests Failed
+            span.badge-pending(x-show="testRun.overallResult === 'partial'") Partial Success
+
+        a.btn-secondary(href="/test-runs") Back to Test Runs
+
+      //- Summary cards
+      .grid.grid-cols-1.md:grid-cols-4.gap-4.mb-8
+        .card.text-center
+          .text-3xl.font-bold.text-primary-600(x-text="testRun.totalSteps || 0")
+          .text-sm.text-gray-600.mt-1 Total Steps
+
+        .card.text-center
+          .text-3xl.font-bold.text-green-600(x-text="testRun.passedSteps || 0")
+          .text-sm.text-gray-600.mt-1 Passed
+
+        .card.text-center
+          .text-3xl.font-bold.text-red-600(x-text="testRun.failedSteps || 0")
+          .text-sm.text-gray-600.mt-1 Failed
+
+        .card.text-center
+          .text-3xl.font-bold.text-gray-900(x-show="testRun.duration" x-text="`${(testRun.duration / 1000).toFixed(1)}s`")
+          .text-3xl.font-bold.text-gray-400(x-show="!testRun.duration") -
+          .text-sm.text-gray-600.mt-1 Duration
+
+      //- Video player
+      div(x-show="testRun.video && testRun.video.path")
+        .card.mb-8
+          h2.text-xl.font-semibold.mb-4 Test Recording
+          video.w-full.rounded-lg(controls :src="testRun.video ? testRun.video.path : ''")
+            | Your browser does not support the video tag.
+
+      //- Test steps results
+      .card.mb-8
+        h2.text-xl.font-semibold.mb-6 Test Steps Results
+
+        .space-y-6
+          template(x-for="(stepResult, index) in testRun.stepResults" :key="index")
+            .border.rounded-lg.p-4(:class="{ 'border-green-300 bg-green-50': stepResult.status === 'passed', 'border-red-300 bg-red-50': stepResult.status === 'failed', 'border-blue-300 bg-blue-50': stepResult.status === 'running', 'border-gray-300 bg-gray-50': stepResult.status === 'pending' }")
+              .flex.items-start.justify-between.mb-3
+                .flex.items-start
+                  span.bg-primary-600.text-white.rounded-full.w-8.h-8.flex.items-center.justify-center.text-sm.font-bold.mr-3.flex-shrink-0(x-text="stepResult.stepOrder")
+                  div
+                    p.font-medium.mb-1(x-text="stepResult.instruction")
+                    div.flex.items-center.space-x-2.mt-2
+                      span.badge-success(x-show="stepResult.status === 'passed'") Passed
+                      span.badge-error(x-show="stepResult.status === 'failed'") Failed
+                      span.badge-running(x-show="stepResult.status === 'running'") Running
+                      span.badge-pending(x-show="stepResult.status === 'pending'") Pending
+                      span.text-sm.text-gray-600(x-show="stepResult.duration" x-text="`${(stepResult.duration / 1000).toFixed(2)}s`")
+
+              //- Playwright code
+              div(x-show="stepResult.playwrightCode")
+                details.mt-3
+                  summary.cursor-pointer.text-sm.font-medium.text-gray-700.hover:text-primary-600 View Generated Code
+                  .code-block.mt-2(x-text="stepResult.playwrightCode")
+
+              //- Error message
+              div(x-show="stepResult.error && stepResult.error.message")
+                .mt-3.bg-red-100.border.border-red-300.rounded.p-3
+                  p.font-medium.text-red-900.mb-1 Error:
+                  p.text-red-800.text-sm(x-text="stepResult.error.message")
+                  details.mt-2(x-show="stepResult.error.stack")
+                    summary.cursor-pointer.text-sm.text-red-700 View Stack Trace
+                    pre.text-xs.mt-2.overflow-auto(x-text="stepResult.error.stack")
+
+              //- Screenshots
+              div(x-show="stepResult.screenshots && stepResult.screenshots.length > 0")
+                .mt-4
+                  p.text-sm.font-medium.text-gray-700.mb-2 Screenshots:
+                  .grid.grid-cols-2.md:grid-cols-4.gap-3
+                    template(x-for="screenshot in stepResult.screenshots" :key="screenshot.path")
+                      img.screenshot-preview.border.rounded.w-full.h-32.object-cover(
+                        :src="screenshot.path"
+                        :alt="`Screenshot for step ${stepResult.stepOrder}`"
+                        @click="openImageModal(screenshot.path)"
+                      )
+
+      //- Metadata
+      .card
+        h2.text-xl.font-semibold.mb-4 Test Run Metadata
+        .grid.grid-cols-1.md:grid-cols-2.gap-4.text-sm
+          div
+            .flex.justify-between.py-2.border-b
+              span.text-gray-600 Started At:
+              span.font-medium(x-text="testRun.startedAt ? new Date(testRun.startedAt).toLocaleString() : 'Not started'")
+            .flex.justify-between.py-2.border-b
+              span.text-gray-600 Completed At:
+              span.font-medium(x-text="testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'Not completed'")
+          div
+            .flex.justify-between.py-2.border-b
+              span.text-gray-600 Browser:
+              span.font-medium(x-text="testRun.metadata && testRun.metadata.browserVersion ? `Chromium ${testRun.metadata.browserVersion}` : 'Unknown'")
+            .flex.justify-between.py-2.border-b
+              span.text-gray-600 Platform:
+              span.font-medium(x-text="testRun.metadata && testRun.metadata.platform ? testRun.metadata.platform : 'Unknown'")
+
+    //- Image modal
+    div(x-show="showImageModal" @click="closeImageModal" x-cloak)
+      .modal-backdrop
+        .modal-content.max-w-6xl.p-4(@click.stop)
+          .flex.justify-end.mb-2
+            button.text-gray-500.hover:text-gray-700(@click="closeImageModal")
+              svg.w-6.h-6(fill="none" stroke="currentColor" viewBox="0 0 24 24")
+                path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12")
+          img.w-full.rounded(:src="currentImage" alt="Full size screenshot")
+
+  script.
+    function viewTestRunPage(testRunId) {
+      return {
+        testRunId,
+        testRun: {
+          stepResults: []
+        },
+        loading: true,
+        showImageModal: false,
+        currentImage: '',
+        pollInterval: null,
+
+        async init() {
+          await this.loadTestRun();
+
+          // Auto-refresh if test is running
+          if (this.testRun.status === 'running' || this.testRun.status === 'pending') {
+            this.startPolling();
+          }
+        },
+
+        async loadTestRun() {
+          try {
+            this.loading = true;
+            const response = await fetch(`/api/test-runs/${this.testRunId}`);
+            const data = await response.json();
+
+            if (data.success) {
+              this.testRun = data.data;
+
+              // Stop polling if test is complete
+              if (this.testRun.status !== 'running' && this.testRun.status !== 'pending') {
+                this.stopPolling();
+              }
+            } else {
+              alert('Failed to load test run');
+            }
+          } catch (err) {
+            alert('Error loading test run: ' + err.message);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        startPolling() {
+          this.pollInterval = setInterval(() => {
+            this.loadTestRun();
+          }, 3000); // Poll every 3 seconds
+        },
+
+        stopPolling() {
+          if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+            this.pollInterval = null;
+          }
+        },
+
+        openImageModal(imagePath) {
+          this.currentImage = imagePath;
+          this.showImageModal = true;
+        },
+
+        closeImageModal() {
+          this.showImageModal = false;
+          this.currentImage = '';
+        }
+      }
+    }
