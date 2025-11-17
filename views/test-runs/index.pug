@@ -40,7 +40,7 @@ block content
 
           tbody.bg-white.divide-y.divide-gray-200
             template(x-for="run in testRuns" :key="run._id")
-              tr.hover:bg-gray-50.cursor-pointer(@click=`window.location.href='/test-runs/' + run._id`)
+              tr(class="hover:bg-gray-50 cursor-pointer")(@click=`window.location.href='/test-runs/' + run._id`)
                 td.px-4.py-4
                   .font-medium(x-text="run.testSuiteName")
                 td.px-4.py-4.whitespace-nowrap
@@ -67,7 +67,7 @@ block content
                 td.px-4.py-4.whitespace-nowrap.text-sm.text-gray-600
                   span(x-text="run.startedAt ? new Date(run.startedAt).toLocaleString() : 'Not started'")
                 td.px-4.py-4.whitespace-nowrap.text-sm
-                  a.text-primary-600.hover:underline(@click.stop :href="`/test-runs/${run._id}`") View Results
+                  a(class="text-primary-600 hover:underline")(@click.stop :href="`/test-runs/${run._id}`") View Results
 
   script.
     function testRunsPage() {

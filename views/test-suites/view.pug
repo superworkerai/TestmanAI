@@ -18,8 +18,8 @@ block content
           a.btn-secondary(:href="`/test-suites/${testSuiteId}/edit`") Edit
           a.btn-secondary(href="/test-suites") Back to List
 
-      .grid.grid-cols-1.lg:grid-cols-3.gap-6
-        .lg:col-span-2
+      div(class="grid grid-cols-1 lg:grid-cols-3 gap-6")
+        div(class="lg:col-span-2")
           .card.mb-6
             h2.text-xl.font-semibold.mb-4 Test Steps
             .space-y-4
@@ -31,7 +31,7 @@ block content
                       p.font-medium.mb-1(x-text="step.instruction")
                       p.text-sm.text-gray-600(x-show="step.description" x-text="step.description")
 
-        .lg:col-span-1
+        div(class="lg:col-span-1")
           .card.mb-6
             h2.text-xl.font-semibold.mb-4 Variables
             div(x-show="suite.variables && suite.variables.length > 0")
@@ -84,7 +84,7 @@ block content
 
               tbody.bg-white.divide-y.divide-gray-200
                 template(x-for="run in testRuns" :key="run._id")
-                  tr.hover:bg-gray-50
+                  tr(class="hover:bg-gray-50")
                     td.px-4.py-3.whitespace-nowrap
                       span.badge-running(x-show="run.status === 'running'") Running
                       span.badge-success(x-show="run.status === 'completed'") Completed
@@ -103,7 +103,7 @@ block content
                     td.px-4.py-3.whitespace-nowrap.text-sm.text-gray-600
                       span(x-text="run.startedAt ? new Date(run.startedAt).toLocaleString() : '-'")
                     td.px-4.py-3.whitespace-nowrap.text-sm
-                      a.text-primary-600.hover:underline(:href="`/test-runs/${run._id}`") View Results
+                      a(class="text-primary-600 hover:underline")(:href="`/test-runs/${run._id}`") View Results
 
   script.
     function viewTestSuitePage(testSuiteId) {

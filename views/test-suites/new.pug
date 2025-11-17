@@ -48,7 +48,7 @@ block content
                 .flex.items-center
                   span.bg-primary-600.text-white.rounded-full.w-8.h-8.flex.items-center.justify-center.text-sm.font-bold.mr-3(x-text="index + 1")
                   label.text-sm.font-medium.text-gray-700 Step Instruction *
-                button.text-red-600.hover:text-red-800(
+                button(class="text-red-600 hover:text-red-800")(
                   type="button"
                   @click="removeStep(index)"
                   title="Remove step"
@@ -83,7 +83,7 @@ block content
         div(x-show="availableVariables.length > 0")
           .space-y-2
             template(x-for="variable in availableVariables" :key="variable._id")
-              label.flex.items-center.p-3.border.rounded.hover:bg-gray-50.cursor-pointer
+              label(class="flex items-center p-3 border rounded hover:bg-gray-50 cursor-pointer")
                 input.mr-3(
                   type="checkbox"
                   :value="variable._id"
@@ -97,7 +97,7 @@ block content
         div(x-show="variablesLoaded && availableVariables.length === 0")
           .text-center.py-6.text-gray-500
             p No variables found.
-              a.text-primary-600.hover:underline(href="/variables") Create variables
+              a(class="text-primary-600 hover:underline")(href="/variables") Create variables
               |  first.
 
       .flex.space-x-4

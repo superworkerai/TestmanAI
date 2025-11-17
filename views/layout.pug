@@ -8,19 +8,19 @@ html(lang="en")
     script(defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js")
   body.bg-gray-50.min-h-screen
     nav.bg-white.shadow-sm
-      .max-w-7xl.mx-auto.px-4.sm:px-6.lg:px-8
+      div(class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8")
         .flex.justify-between.h-16
           .flex.items-center
             a.text-2xl.font-bold.text-primary-600(href="/") TestmanAI
           .flex.items-center.space-x-8
-            a.text-gray-700.hover:text-primary-600.transition(href="/test-suites") Test Suites
-            a.text-gray-700.hover:text-primary-600.transition(href="/test-runs") Test Runs
-            a.text-gray-700.hover:text-primary-600.transition(href="/variables") Variables
+            a(class="text-gray-700 hover:text-primary-600 transition")(href="/test-suites") Test Suites
+            a(class="text-gray-700 hover:text-primary-600 transition")(href="/test-runs") Test Runs
+            a(class="text-gray-700 hover:text-primary-600 transition")(href="/variables") Variables
 
-    main.max-w-7xl.mx-auto.px-4.sm:px-6.lg:px-8.py-8
+    main(class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8")
       block content
 
     footer.mt-12.bg-white.border-t
-      .max-w-7xl.mx-auto.px-4.sm:px-6.lg:px-8.py-6
+      div(class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8").py-6
         .text-center.text-gray-500.text-sm
           p &copy; #{new Date().getFullYear()} TestmanAI - AI-Powered End-to-End Testing

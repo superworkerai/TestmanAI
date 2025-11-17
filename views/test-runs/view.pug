@@ -24,7 +24,7 @@ block content
         a.btn-secondary(href="/test-runs") Back to Test Runs
 
       //- Summary cards
-      .grid.grid-cols-1.md:grid-cols-4.gap-4.mb-8
+      div(class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8")
         .card.text-center
           .text-3xl.font-bold.text-primary-600(x-text="testRun.totalSteps || 0")
           .text-sm.text-gray-600.mt-1 Total Steps
@@ -71,7 +71,7 @@ block content
               //- Playwright code
               div(x-show="stepResult.playwrightCode")
                 details.mt-3
-                  summary.cursor-pointer.text-sm.font-medium.text-gray-700.hover:text-primary-600 View Generated Code
+                  summary(class="cursor-pointer text-sm font-medium text-gray-700 hover:text-primary-600") View Generated Code
                   .code-block.mt-2(x-text="stepResult.playwrightCode")
 
               //- Error message
@@ -87,7 +87,7 @@ block content
               div(x-show="stepResult.screenshots && stepResult.screenshots.length > 0")
                 .mt-4
                   p.text-sm.font-medium.text-gray-700.mb-2 Screenshots:
-                  .grid.grid-cols-2.md:grid-cols-4.gap-3
+                  div(class="grid grid-cols-2 md:grid-cols-4 gap-3")
                     template(x-for="screenshot in stepResult.screenshots" :key="screenshot.path")
                       img.screenshot-preview.border.rounded.w-full.h-32.object-cover(
                         :src="screenshot.path"
@@ -98,7 +98,7 @@ block content
       //- Metadata
       .card
         h2.text-xl.font-semibold.mb-4 Test Run Metadata
-        .grid.grid-cols-1.md:grid-cols-2.gap-4.text-sm
+        div(class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm")
           div
             .flex.justify-between.py-2.border-b
               span.text-gray-600 Started At:
@@ -119,7 +119,7 @@ block content
       .modal-backdrop
         .modal-content.max-w-6xl.p-4(@click.stop)
           .flex.justify-end.mb-2
-            button.text-gray-500.hover:text-gray-700(@click="closeImageModal")
+            button(class="text-gray-500 hover:text-gray-700")(@click="closeImageModal")
               svg.w-6.h-6(fill="none" stroke="currentColor" viewBox="0 0 24 24")
                 path(stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12")
           img.w-full.rounded(:src="currentImage" alt="Full size screenshot")
